@@ -7,10 +7,7 @@
 </head>
 <body>
     <h1>Admin Panel</h1>
-    <input type="file" id="upload-files" multiple>
-    <button id="download-csv">Download Combined CSV</button>
-
-    <h2>Uploaded Data:</h2>
+    <h2>Participant Data:</h2>
     <table border="1" id="data-table">
         <thead>
             <tr>
@@ -20,54 +17,61 @@
             </tr>
         </thead>
         <tbody>
-            <!-- 업로드된 데이터가 여기에 표시됩니다 -->
+            <!-- 참가자 데이터가 여기에 표시됩니다 -->
         </tbody>
     </table>
+    <button id="download-csv">Download CSV</button>
 
     <script>
-        const uploadFilesInput = document.getElementById('upload-files');
-        const downloadCsvButton = document.getElementById('download-csv');
         const dataTable = document.getElementById('data-table').getElementsByTagName('tbody')[0];
-        const allData = [];
+        const downloadCsvButton = document.getElementById('download-csv');
 
-        uploadFilesInput.addEventListener('change', (event) => {
-            const files = event.target.files;
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const data = JSON.parse(reader.result);
-                    allData.push(data);
+        // 데이터 불러오기
+        function fetchData() {
+            fetch('https://your-backend-server.com/data')
+                .then(response => response.json())
+                .then(data => {
+                    dataTable.innerHTML = ''; // 기존 데이터 초기화
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.participantId}</td>
+                            <td>${row.selectedImages.join('; ')}</td>
+                            <td>${row.totalCount}</td>
+                        `;
+                        dataTable.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${data.participantId}</td>
-                        <td>${data.selectedImages.join('; ')}</td>
-                        <td>${data.totalCount}</td>
-                    `;
-                    dataTable.appendChild(tr);
-                };
-                reader.readAsText(file);
-            });
-        });
-
+        // CSV 다운로드
         downloadCsvButton.addEventListener('click', () => {
-            const csvContent = [
-                ["Participant ID", "Selected Images", "Total Selected"],
-                ...allData.map(row => [row.participantId, row.selectedImages.join("; "), row.totalCount]),
-            ]
-                .map(row => row.join(","))
-                .join("\n");
+            fetch('https://your-backend-server.com/data')
+                .then(response => response.json())
+                .then(data => {
+                    const csvContent = [
+                        ["Participant ID", "Selected Images", "Total Selected"],
+                        ...data.map(row => [row.participantId, row.selectedImages.join("; "), row.totalCount]),
+                    ]
+                        .map(row => row.join(","))
+                        .join("\n");
 
-            const blob = new Blob([csvContent], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
+                    const blob = new Blob([csvContent], { type: "text/csv" });
+                    const url = URL.createObjectURL(blob);
 
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "combined_participant_data.csv";
-            a.click();
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "participant_data.csv";
+                    a.click();
 
-            URL.revokeObjectURL(url);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error:', error));
         });
+
+        // 실시간 데이터 갱신
+        setInterval(fetchData, 5000); // 5초마다 데이터 갱신
     </script>
 </body>
 </html>
