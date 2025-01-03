@@ -30,11 +30,12 @@
 </head>
 <body>
     <h1>Image Selection Experiment</h1>
-    <p>Click on the images to select them. After finishing, download your results.</p>
+    <p>Click on the images to select them. After submitting, your choices will be saved.</p>
 
     <div>
         <label for="participant-id">Participant ID: </label>
         <input type="text" id="participant-id" placeholder="Enter your ID">
+        <button id="submit-data">Submit</button>
     </div>
 
     <div class="image-container">
@@ -44,12 +45,14 @@
         <img src="images/dog.png" alt="Dog" data-name="Dog">
     </div>
 
-    <button id="download-data">Download Data</button>
+    <h2>Your Selected Images:</h2>
+    <ul id="selected-list"></ul>
 
     <script>
         const images = document.querySelectorAll('.image-container img');
         const participantIdInput = document.getElementById('participant-id');
-        const downloadDataButton = document.getElementById('download-data');
+        const submitDataButton = document.getElementById('submit-data');
+        const selectedList = document.getElementById('selected-list');
         const selectedImages = new Set();
 
         images.forEach(image => {
@@ -62,10 +65,20 @@
                     image.classList.add('selected');
                     selectedImages.add(imageName);
                 }
+                updateSelectedList();
             });
         });
 
-        downloadDataButton.addEventListener('click', () => {
+        function updateSelectedList() {
+            selectedList.innerHTML = '';
+            selectedImages.forEach(name => {
+                const listItem = document.createElement('li');
+                listItem.textContent = name;
+                selectedList.appendChild(listItem);
+            });
+        }
+
+        submitDataButton.addEventListener('click', () => {
             const participantId = participantIdInput.value.trim();
             if (!participantId) {
                 alert("Please enter a Participant ID!");
@@ -78,15 +91,19 @@
                 totalCount: selectedImages.size,
             };
 
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `participant_${participantId}.json`;
-            a.click();
-
-            URL.revokeObjectURL(url);
+            fetch('https://your-backend-server.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+                .then(response => response.json())
+                .then(result => {
+                    alert("Your choices have been submitted. Thank you!");
+                    selectedImages.clear();
+                    updateSelectedList();
+                    images.forEach(img => img.classList.remove('selected'));
+                })
+                .catch(error => console.error('Error:', error));
         });
     </script>
 </body>
