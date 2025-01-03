@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participant Experiment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .image-container img {
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            transition: border 0.3s;
+        }
+        .image-container img.selected {
+            border: 2px solid green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Selection Experiment</h1>
+    <p>Click on the images to select them. After finishing, download your results.</p>
+
+    <div>
+        <label for="participant-id">Participant ID: </label>
+        <input type="text" id="participant-id" placeholder="Enter your ID">
+    </div>
+
+    <div class="image-container">
+        <img src="images/apple.png" alt="Apple" data-name="Apple">
+        <img src="images/bruce.png" alt="Bruce" data-name="Bruce">
+        <img src="images/cat.png" alt="Cat" data-name="Cat">
+        <img src="images/dog.png" alt="Dog" data-name="Dog">
+    </div>
+
+    <button id="download-data">Download Data</button>
+
+    <script>
+        const images = document.querySelectorAll('.image-container img');
+        const participantIdInput = document.getElementById('participant-id');
+        const downloadDataButton = document.getElementById('download-data');
+        const selectedImages = new Set();
+
+        images.forEach(image => {
+            image.addEventListener('click', () => {
+                const imageName = image.getAttribute('data-name');
+                if (image.classList.contains('selected')) {
+                    image.classList.remove('selected');
+                    selectedImages.delete(imageName);
+                } else {
+                    image.classList.add('selected');
+                    selectedImages.add(imageName);
+                }
+            });
+        });
+
+        downloadDataButton.addEventListener('click', () => {
+            const participantId = participantIdInput.value.trim();
+            if (!participantId) {
+                alert("Please enter a Participant ID!");
+                return;
+            }
+
+            const data = {
+                participantId,
+                selectedImages: Array.from(selectedImages),
+                totalCount: selectedImages.size,
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `participant_${participantId}.json`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

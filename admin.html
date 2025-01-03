@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <input type="file" id="upload-files" multiple>
+    <button id="download-csv">Download Combined CSV</button>
+
+    <h2>Uploaded Data:</h2>
+    <table border="1" id="data-table">
+        <thead>
+            <tr>
+                <th>Participant ID</th>
+                <th>Selected Images</th>
+                <th>Total Selected</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 업로드된 데이터가 여기에 표시됩니다 -->
+        </tbody>
+    </table>
+
+    <script>
+        const uploadFilesInput = document.getElementById('upload-files');
+        const downloadCsvButton = document.getElementById('download-csv');
+        const dataTable = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+        const allData = [];
+
+        uploadFilesInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const data = JSON.parse(reader.result);
+                    allData.push(data);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${data.participantId}</td>
+                        <td>${data.selectedImages.join('; ')}</td>
+                        <td>${data.totalCount}</td>
+                    `;
+                    dataTable.appendChild(tr);
+                };
+                reader.readAsText(file);
+            });
+        });
+
+        downloadCsvButton.addEventListener('click', () => {
+            const csvContent = [
+                ["Participant ID", "Selected Images", "Total Selected"],
+                ...allData.map(row => [row.participantId, row.selectedImages.join("; "), row.totalCount]),
+            ]
+                .map(row => row.join(","))
+                .join("\n");
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "combined_participant_data.csv";
+            a.click();
+
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
