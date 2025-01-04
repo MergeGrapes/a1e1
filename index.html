@@ -1,261 +1,134 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Participant Experiment</title>
-
     <style>
-
         body {
-
             font-family: Arial, sans-serif;
-
             text-align: center;
-
         }
-
         .image-container {
-
             display: flex;
-
             justify-content: center;
-
             gap: 20px;
-
             margin: 20px 0;
-
         }
-
         .image-container img {
-
             width: 150px;
-
             height: 150px;
-
             cursor: pointer;
-
             border: 2px solid transparent;
-
             border-radius: 10px;
-
             transition: border 0.3s;
-
         }
-
         .image-container img.selected {
-
             border: 2px solid green;
-
         }
-
         #submit-message {
-
             display: none; /* 기본적으로 숨김 처리 */
-
             font-size: 20px;
-
             color: green;
-
             margin-top: 20px;
-
         }
-
     </style>
-
 </head>
-
 <body>
-
     <h1>Image Selection Experiment</h1>
-
     <p>Click on the images to select them. After submitting, your choices will be saved.</p>
 
-
-
     <div>
-
         <label for="participant-id">Participant ID: </label>
-
         <input type="text" id="participant-id" placeholder="Enter your ID">
-
         <button id="submit-data">Submit</button>
-
     </div>
-
-
 
     <div class="image-container">
-
         <img src="images/apple.png" alt="Apple" data-name="Apple">
-
         <img src="images/bruce.png" alt="Bruce" data-name="Bruce">
-
         <img src="images/cat.png" alt="Cat" data-name="Cat">
-
         <img src="images/dog.png" alt="Dog" data-name="Dog">
-
     </div>
-
-
 
     <h2>Your Selected Images:</h2>
-
     <ul id="selected-list"></ul>
 
-
-
     <div id="submit-message">
-
         <p>Submit Completed! 🎉 Thank you for participating.</p>
-
     </div>
 
-
-
     <script>
-
         const images = document.querySelectorAll('.image-container img');
-
         const participantIdInput = document.getElementById('participant-id');
-
         const submitDataButton = document.getElementById('submit-data');
-
         const selectedList = document.getElementById('selected-list');
-
         const submitMessage = document.getElementById('submit-message');
-
         const selectedImages = new Set();
 
-
-
+        // 이미지 클릭 이벤트 추가
         images.forEach(image => {
-
             image.addEventListener('click', () => {
-
                 const imageName = image.getAttribute('data-name');
-
                 if (image.classList.contains('selected')) {
-
-                    image.classList.remove('selected');
-
-                    selectedImages.delete(imageName);
-
+                    image.classList.remove('selected'); // 초록색 테두리 제거
+                    selectedImages.delete(imageName); // 선택 목록에서 제거
                 } else {
-
-                    image.classList.add('selected');
-
-                    selectedImages.add(imageName);
-
+                    image.classList.add('selected'); // 초록색 테두리 추가
+                    selectedImages.add(imageName); // 선택 목록에 추가
                 }
-
-                updateSelectedList();
-
+                updateSelectedList(); // 선택된 목록 업데이트
             });
-
         });
 
-
-
+        // 선택된 이미지 목록 업데이트
         function updateSelectedList() {
-
             selectedList.innerHTML = '';
-
             selectedImages.forEach(name => {
-
                 const listItem = document.createElement('li');
-
                 listItem.textContent = name;
-
                 selectedList.appendChild(listItem);
-
             });
-
         }
 
-
-
+        // 데이터 제출 버튼 클릭 이벤트
         submitDataButton.addEventListener('click', () => {
-
             const participantId = participantIdInput.value.trim();
-
             if (!participantId) {
-
                 alert("Please enter a Participant ID!");
-
                 return;
-
             }
 
-
-
             const data = {
-
                 participantId,
-
                 selectedImages: Array.from(selectedImages),
-
                 totalCount: selectedImages.size,
-
             };
 
-
-
-            fetch('http://localhost:3000/data’, { // 백엔드 URL
-
+            fetch('http://localhost:3000/submit', { // 백엔드 URL
                 method: 'POST',
-
                 headers: { 'Content-Type': 'application/json' },
-
                 body: JSON.stringify(data),
-
             })
-
                 .then(response => {
-
                     if (!response.ok) throw new Error('Network response was not ok');
-
                     return response.json();
-
                 })
-
                 .then(result => {
-
                     console.log("Submit Successful:", result);
-
                     // 제출 완료 메시지 표시
-
                     submitMessage.style.display = 'block';
-
-                    // 폼 및 이미지 선택 초기화
-
+                    // 폼 및 선택 초기화
                     participantIdInput.value = '';
-
                     selectedImages.clear();
-
                     updateSelectedList();
-
                     images.forEach(img => img.classList.remove('selected'));
-
                 })
-
                 .catch(error => {
-
                     console.error('Error:', error);
-
                     alert("An error occurred while submitting. Please try again.");
-
                 });
-
         });
-
     </script>
-
 </body>
-
 </html>
