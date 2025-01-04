@@ -102,7 +102,7 @@
                 totalCount: selectedImages.size,
             };
 
-            fetch('http://localhost:3000/submit', { // 백엔드 URL
+            fetch('http://localhost:3000/data', { // 백엔드 URL
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
