@@ -102,12 +102,15 @@
                 totalCount: selectedImages.size,
             };
 
-            fetch('http://localhost:3000/submit', {
+            fetch('http://localhost:3000/submit', { // 백엔드 URL
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
                 .then(result => {
                     console.log("Submit Successful:", result);
                     // 제출 완료 메시지 표시
